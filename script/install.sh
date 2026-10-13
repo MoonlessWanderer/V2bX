@@ -39,11 +39,9 @@ if [[ $arch == "x86_64" || $arch == "x64" || $arch == "amd64" ]]; then
     arch="64"
 elif [[ $arch == "aarch64" || $arch == "arm64" ]]; then
     arch="arm64-v8a"
-elif [[ $arch == "s390x" ]]; then
-    arch="s390x"
 else
-    arch="64"
-    echo -e "${red}Could not detect the CPU architecture. Using the default: ${arch}${plain}"
+    echo -e "${red}This installer supports Linux on x86_64 and arm64 only. Detected: ${arch}${plain}"
+    exit 1
 fi
 
 echo "Architecture: ${arch}"

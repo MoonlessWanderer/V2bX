@@ -40,6 +40,8 @@ This project is meant to be used with a [modified V2board](https://github.com/wy
 
 ## Install
 
+V2bX runs on Linux: Ubuntu, Debian, CentOS and the RHEL family (Rocky, Alma, Oracle Linux), Alpine, and Arch. Builds are published for x86_64 and arm64.
+
 ### One-click install
 
 ```
