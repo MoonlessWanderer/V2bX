@@ -465,10 +465,6 @@ add_node_config() {
             * ) echo -e "${red}That choice is not valid. Xray supports Shadowsocks, Vless, Vmess, and Trojan.${plain}" ;;
         esac
     done
-    Outbound=""
-    if [ "$core_type" == "1" ]; then
-        read -rp "Outbound tag for this node (press Enter to use the default): " Outbound
-    fi
     fastopen=true
     if [ "$NodeType" == "vless" ]; then
         read -rp "Is this a Reality node? (y/n)" isreality
@@ -513,7 +509,7 @@ add_node_config() {
             "ApiKey": "$ApiKey",
             "NodeID": $NodeID,
             "NodeType": "$NodeType",
-            "Outbound": "$Outbound",
+            "OutboundTag": "",
             "Timeout": 30,
             "ListenIP": "0.0.0.0",
             "SendIP": "0.0.0.0",

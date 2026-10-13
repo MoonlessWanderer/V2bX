@@ -40,7 +40,7 @@ func (c *Xray) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	if err != nil {
 		return fmt.Errorf("add outbound error: %s", err)
 	}
-	if out := strings.TrimSpace(config.Outbound); out != "" {
+	if out := strings.TrimSpace(config.OutboundTag); out != "" {
 		if c.ohm.GetHandler(out) == nil {
 			_ = c.DelNode(tag)
 			return fmt.Errorf("outbound %q is not defined in custom_outbound.json", out)
