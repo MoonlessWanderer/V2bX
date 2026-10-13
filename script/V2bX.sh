@@ -717,7 +717,7 @@ EOF
             "tag": "IPv4_out",
             "protocol": "freedom",
             "settings": {
-                "domainStrategy": "UseIPv4v6"
+                "domainStrategy": "ForceIPv4"
             }
         },
         {

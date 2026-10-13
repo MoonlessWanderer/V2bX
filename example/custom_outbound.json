@@ -2,7 +2,9 @@
     {
         "tag": "IPv4_out",
         "protocol": "freedom",
-        "settings": {}
+        "settings": {
+            "domainStrategy": "ForceIPv4"
+        }
     },
     {
         "tag": "IPv6_out",
