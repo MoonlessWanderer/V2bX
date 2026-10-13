@@ -6,7 +6,7 @@ yellow='\033[0;33m'
 plain='\033[0m'
 
 # check root
-[[ $EUID -ne 0 ]] && echo -e "${red}错误: ${plain} 必须使用root用户运行此脚本！\n" && exit 1
+[[ $EUID -ne 0 ]] && echo -e "${red}Error: ${plain} Please run this script as root.\n" && exit 1
 
 # check os
 if [[ -f /etc/redhat-release ]]; then
@@ -28,7 +28,7 @@ elif cat /proc/version | grep -Eqi "centos|red hat|redhat|rocky|alma|oracle linu
 elif cat /proc/version | grep -Eqi "arch"; then
     release="arch"
 else
-    echo -e "${red}未检测到系统版本，请联系脚本作者！${plain}\n" && exit 1
+    echo -e "${red}We could not detect your system. Please contact the script author.${plain}\n" && exit 1
 fi
 
 # os version
@@ -41,33 +41,33 @@ fi
 
 if [[ x"${release}" == x"centos" ]]; then
     if [[ ${os_version} -le 6 ]]; then
-        echo -e "${red}请使用 CentOS 7 或更高版本的系统！${plain}\n" && exit 1
+        echo -e "${red}Please use CentOS 7 or a newer release.${plain}\n" && exit 1
     fi
     if [[ ${os_version} -eq 7 ]]; then
-        echo -e "${red}注意： CentOS 7 无法使用hysteria1/2协议！${plain}\n"
+        echo -e "${red}Note: CentOS 7 cannot use the Hysteria 1 or 2 protocols.${plain}\n"
     fi
 elif [[ x"${release}" == x"ubuntu" ]]; then
     if [[ ${os_version} -lt 16 ]]; then
-        echo -e "${red}请使用 Ubuntu 16 或更高版本的系统！${plain}\n" && exit 1
+        echo -e "${red}Please use Ubuntu 16 or a newer release.${plain}\n" && exit 1
     fi
 elif [[ x"${release}" == x"debian" ]]; then
     if [[ ${os_version} -lt 8 ]]; then
-        echo -e "${red}请使用 Debian 8 或更高版本的系统！${plain}\n" && exit 1
+        echo -e "${red}Please use Debian 8 or a newer release.${plain}\n" && exit 1
     fi
 fi
 
-# 检查系统是否有 IPv6 地址
+# Check whether the system has an IPv6 address
 check_ipv6_support() {
     if ip -6 addr | grep -q "inet6"; then
-        echo "1"  # 支持 IPv6
+        echo "1"  # IPv6 is available
     else
-        echo "0"  # 不支持 IPv6
+        echo "0"  # IPv6 is not available
     fi
 }
 
 confirm() {
     if [[ $# > 1 ]]; then
-        echo && read -rp "$1 [默认$2]: " temp
+        echo && read -rp "$1 [default $2]: " temp
         if [[ x"${temp}" == x"" ]]; then
             temp=$2
         fi
@@ -82,7 +82,7 @@ confirm() {
 }
 
 confirm_restart() {
-    confirm "是否重启V2bX" "y"
+    confirm "Restart V2bX?" "y"
     if [[ $? == 0 ]]; then
         restart
     else
@@ -91,7 +91,7 @@ confirm_restart() {
 }
 
 before_show_menu() {
-    echo && echo -n -e "${yellow}按回车返回主菜单: ${plain}" && read temp
+    echo && echo -n -e "${yellow}Press Enter to return to the main menu: ${plain}" && read temp
     show_menu
 }
 
@@ -108,13 +108,13 @@ install() {
 
 update() {
     if [[ $# == 0 ]]; then
-        echo && echo -n -e "输入指定版本(默认最新版): " && read version
+        echo && echo -n -e "Enter a version (default: latest): " && read version
     else
         version=$2
     fi
     bash <(curl -Ls https://raw.githubusercontent.com/MoonlessWanderer/V2bX/main/script/install.sh) $version
     if [[ $? == 0 ]]; then
-        echo -e "${green}更新完成，已自动重启 V2bX，请使用 V2bX log 查看运行日志${plain}"
+        echo -e "${green}Update complete. V2bX has been restarted. Use V2bX log to view the logs.${plain}"
         exit
     fi
 
@@ -124,30 +124,30 @@ update() {
 }
 
 config() {
-    echo "V2bX在修改配置后会自动尝试重启"
+    echo "V2bX will try to restart automatically after you save the config."
     vi /etc/V2bX/config.json
     sleep 2
     restart
     check_status
     case $? in
         0)
-            echo -e "V2bX状态: ${green}已运行${plain}"
+            echo -e "V2bX status: ${green}running${plain}"
             ;;
         1)
-            echo -e "检测到您未启动V2bX或V2bX自动重启失败，是否查看日志？[Y/n]" && echo
-            read -e -rp "(默认: y):" yn
+            echo -e "V2bX is not running, or the automatic restart failed. Would you like to view the logs? [Y/n]" && echo
+            read -e -rp "(default: y):" yn
             [[ -z ${yn} ]] && yn="y"
             if [[ ${yn} == [Yy] ]]; then
                show_log
             fi
             ;;
         2)
-            echo -e "V2bX状态: ${red}未安装${plain}"
+            echo -e "V2bX status: ${red}not installed${plain}"
     esac
 }
 
 uninstall() {
-    confirm "确定要卸载 V2bX 吗?" "n"
+    confirm "Are you sure you want to uninstall V2bX?" "n"
     if [[ $? != 0 ]]; then
         if [[ $# == 0 ]]; then
             show_menu
@@ -169,7 +169,7 @@ uninstall() {
     rm /usr/local/V2bX/ -rf
 
     echo ""
-    echo -e "卸载成功，如果你想删除此脚本，则退出脚本后运行 ${green}rm /usr/bin/V2bX -f${plain} 进行删除"
+    echo -e "V2bX was uninstalled. To remove this script as well, exit and run ${green}rm /usr/bin/V2bX -f${plain}."
     echo ""
 
     if [[ $# == 0 ]]; then
@@ -181,7 +181,7 @@ start() {
     check_status
     if [[ $? == 0 ]]; then
         echo ""
-        echo -e "${green}V2bX已运行，无需再次启动，如需重启请选择重启${plain}"
+        echo -e "${green}V2bX is already running. Choose restart if you want to restart it.${plain}"
     else
         if [[ x"${release}" == x"alpine" ]]; then
             service V2bX start
@@ -191,9 +191,9 @@ start() {
         sleep 2
         check_status
         if [[ $? == 0 ]]; then
-            echo -e "${green}V2bX 启动成功，请使用 V2bX log 查看运行日志${plain}"
+            echo -e "${green}V2bX started. Use V2bX log to view the logs.${plain}"
         else
-            echo -e "${red}V2bX可能启动失败，请稍后使用 V2bX log 查看日志信息${plain}"
+            echo -e "${red}V2bX may have failed to start. Please check the logs with V2bX log.${plain}"
         fi
     fi
 
@@ -211,9 +211,9 @@ stop() {
     sleep 2
     check_status
     if [[ $? == 1 ]]; then
-        echo -e "${green}V2bX 停止成功${plain}"
+        echo -e "${green}V2bX stopped.${plain}"
     else
-        echo -e "${red}V2bX停止失败，可能是因为停止时间超过了两秒，请稍后查看日志信息${plain}"
+        echo -e "${red}V2bX did not stop. It may need more than two seconds. Please check the logs shortly.${plain}"
     fi
 
     if [[ $# == 0 ]]; then
@@ -230,9 +230,9 @@ restart() {
     sleep 2
     check_status
     if [[ $? == 0 ]]; then
-        echo -e "${green}V2bX 重启成功，请使用 V2bX log 查看运行日志${plain}"
+        echo -e "${green}V2bX restarted. Use V2bX log to view the logs.${plain}"
     else
-        echo -e "${red}V2bX可能启动失败，请稍后使用 V2bX log 查看日志信息${plain}"
+        echo -e "${red}V2bX may have failed to start. Please check the logs with V2bX log.${plain}"
     fi
     if [[ $# == 0 ]]; then
         before_show_menu
@@ -257,9 +257,9 @@ enable() {
         systemctl enable V2bX
     fi
     if [[ $? == 0 ]]; then
-        echo -e "${green}V2bX 设置开机自启成功${plain}"
+        echo -e "${green}V2bX will now start on boot.${plain}"
     else
-        echo -e "${red}V2bX 设置开机自启失败${plain}"
+        echo -e "${red}Could not enable start on boot.${plain}"
     fi
 
     if [[ $# == 0 ]]; then
@@ -274,9 +274,9 @@ disable() {
         systemctl disable V2bX
     fi
     if [[ $? == 0 ]]; then
-        echo -e "${green}V2bX 取消开机自启成功${plain}"
+        echo -e "${green}V2bX will no longer start on boot.${plain}"
     else
-        echo -e "${red}V2bX 取消开机自启失败${plain}"
+        echo -e "${red}Could not disable start on boot.${plain}"
     fi
 
     if [[ $# == 0 ]]; then
@@ -286,7 +286,7 @@ disable() {
 
 show_log() {
     if [[ x"${release}" == x"alpine" ]]; then
-        echo -e "${red}alpine系统暂不支持日志查看${plain}\n" && exit 1
+        echo -e "${red}Log viewing is not available on Alpine yet.${plain}\n" && exit 1
     else
         journalctl -u V2bX.service -e --no-pager -f
     fi
@@ -303,11 +303,11 @@ update_shell() {
     wget -O /usr/bin/V2bX -N --no-check-certificate https://raw.githubusercontent.com/MoonlessWanderer/V2bX/main/script/V2bX.sh
     if [[ $? != 0 ]]; then
         echo ""
-        echo -e "${red}下载脚本失败，请检查本机能否连接 Github${plain}"
+        echo -e "${red}Could not download the script. Please check that this machine can reach GitHub.${plain}"
         before_show_menu
     else
         chmod +x /usr/bin/V2bX
-        echo -e "${green}升级脚本成功，请重新运行脚本${plain}" && exit 0
+        echo -e "${green}The script was updated. Please run it again.${plain}" && exit 0
     fi
 }
 
@@ -355,7 +355,7 @@ check_uninstall() {
     check_status
     if [[ $? != 2 ]]; then
         echo ""
-        echo -e "${red}V2bX已安装，请不要重复安装${plain}"
+        echo -e "${red}V2bX is already installed. There is no need to install it again.${plain}"
         if [[ $# == 0 ]]; then
             before_show_menu
         fi
@@ -369,7 +369,7 @@ check_install() {
     check_status
     if [[ $? == 2 ]]; then
         echo ""
-        echo -e "${red}请先安装V2bX${plain}"
+        echo -e "${red}Please install V2bX first.${plain}"
         if [[ $# == 0 ]]; then
             before_show_menu
         fi
@@ -383,29 +383,29 @@ show_status() {
     check_status
     case $? in
         0)
-            echo -e "V2bX状态: ${green}已运行${plain}"
+            echo -e "V2bX status: ${green}running${plain}"
             show_enable_status
             ;;
         1)
-            echo -e "V2bX状态: ${yellow}未运行${plain}"
+            echo -e "V2bX status: ${yellow}not running${plain}"
             show_enable_status
             ;;
         2)
-            echo -e "V2bX状态: ${red}未安装${plain}"
+            echo -e "V2bX status: ${red}not installed${plain}"
     esac
 }
 
 show_enable_status() {
     check_enabled
     if [[ $? == 0 ]]; then
-        echo -e "是否开机自启: ${green}是${plain}"
+        echo -e "Start on boot: ${green}yes${plain}"
     else
-        echo -e "是否开机自启: ${red}否${plain}"
+        echo -e "Start on boot: ${red}no${plain}"
     fi
 }
 
 generate_x25519_key() {
-    echo -n "正在生成 x25519 密钥："
+    echo -n "Generating an x25519 key: "
     /usr/local/V2bX/V2bX x25519
     echo ""
     if [[ $# == 0 ]]; then
@@ -414,7 +414,7 @@ generate_x25519_key() {
 }
 
 show_V2bX_version() {
-    echo -n "V2bX 版本："
+    echo -n "V2bX version: "
     /usr/local/V2bX/V2bX version
     echo ""
     if [[ $# == 0 ]]; then
@@ -423,11 +423,11 @@ show_V2bX_version() {
 }
 
 add_node_config() {
-    echo -e "${green}请选择节点核心类型：${plain}"
+    echo -e "${green}Please choose a node core:${plain}"
     echo -e "${green}1. xray${plain}"
     echo -e "${green}2. singbox${plain}"
     echo -e "${green}3. hysteria2${plain}"
-    read -rp "请输入：" core_type
+    read -rp "Please enter: " core_type
     if [ "$core_type" == "1" ]; then
         core="xray"
         core_xray=true
@@ -438,23 +438,23 @@ add_node_config() {
         core="hysteria2"
         core_hysteria2=true
     else
-        echo "无效的选择。请选择 1 2 3。"
+        echo "That choice is not valid. Please choose 1, 2, or 3."
         continue
     fi
     while true; do
-        read -rp "请输入节点Node ID：" NodeID
-        # 判断NodeID是否为正整数
+        read -rp "Please enter the node ID: " NodeID
+        # Node ID must be a positive integer
         if [[ "$NodeID" =~ ^[0-9]+$ ]]; then
-            break  # 输入正确，退出循环
+            break  # Valid input, leave the loop
         else
-            echo "错误：请输入正确的数字作为Node ID。"
+            echo "Please enter a valid number for the node ID."
         fi
     done
 
     if [ "$core_hysteria2" = true ] && [ "$core_xray" = false ] && [ "$core_sing" = false ]; then
         NodeType="hysteria2"
     else
-        echo -e "${yellow}请选择节点传输协议：${plain}"
+        echo -e "${yellow}Please choose a transport protocol:${plain}"
         echo -e "${green}1. Shadowsocks${plain}"
         echo -e "${green}2. Vless${plain}"
         echo -e "${green}3. Vmess${plain}"
@@ -470,7 +470,7 @@ add_node_config() {
             echo -e "${green}7. Tuic${plain}"
             echo -e "${green}8. AnyTLS${plain}"
         fi
-        read -rp "请输入：" NodeType
+        read -rp "Please enter: " NodeType
         case "$NodeType" in
             1 ) NodeType="shadowsocks" ;;
             2 ) NodeType="vless" ;;
@@ -485,32 +485,32 @@ add_node_config() {
     fi
     fastopen=true
     if [ "$NodeType" == "vless" ]; then
-        read -rp "请选择是否为reality节点？(y/n)" isreality
+        read -rp "Is this a Reality node? (y/n)" isreality
     elif [ "$NodeType" == "hysteria" ] || [ "$NodeType" == "hysteria2" ] || [ "$NodeType" == "tuic" ] || [ "$NodeType" == "anytls" ]; then
         fastopen=false
         istls="y"
     fi
 
     if [[ "$isreality" != "y" && "$isreality" != "Y" &&  "$istls" != "y" ]]; then
-        read -rp "请选择是否进行TLS配置？(y/n)" istls
+        read -rp "Configure TLS? (y/n)" istls
     fi
 
     certmode="none"
     certdomain="example.com"
     if [[ "$isreality" != "y" && "$isreality" != "Y" && ( "$istls" == "y" || "$istls" == "Y" ) ]]; then
-        echo -e "${yellow}请选择证书申请模式：${plain}"
-        echo -e "${green}1. http模式自动申请，节点域名已正确解析${plain}"
-        echo -e "${green}2. dns模式自动申请，需填入正确域名服务商API参数${plain}"
-        echo -e "${green}3. self模式，自签证书或提供已有证书文件${plain}"
-        read -rp "请输入：" certmode
+        echo -e "${yellow}Please choose a certificate mode:${plain}"
+        echo -e "${green}1. http: request a certificate automatically. The node domain must already resolve.${plain}"
+        echo -e "${green}2. dns: request a certificate automatically. You will need your DNS provider API credentials.${plain}"
+        echo -e "${green}3. self: use a self-signed certificate, or an existing certificate file.${plain}"
+        read -rp "Please enter: " certmode
         case "$certmode" in
             1 ) certmode="http" ;;
             2 ) certmode="dns" ;;
             3 ) certmode="self" ;;
         esac
-        read -rp "请输入节点证书域名(example.com)：" certdomain
+        read -rp "Please enter the certificate domain (example.com): " certdomain
         if [ "$certmode" != "http" ]; then
-            echo -e "${red}请手动修改配置文件后重启V2bX！${plain}"
+            echo -e "${red}Please edit the config file yourself, then restart V2bX.${plain}"
         fi
     fi
     ipv6_support=$(check_ipv6_support)
@@ -615,14 +615,14 @@ EOF
 }
 
 generate_config_file() {
-    echo -e "${yellow}V2bX 配置文件生成向导${plain}"
-    echo -e "${red}请阅读以下注意事项：${plain}"
-    echo -e "${red}1. 目前该功能正处测试阶段${plain}"
-    echo -e "${red}2. 生成的配置文件会保存到 /etc/V2bX/config.json${plain}"
-    echo -e "${red}3. 原来的配置文件会保存到 /etc/V2bX/config.json.bak${plain}"
-    echo -e "${red}4. 目前仅部分支持TLS${plain}"
-    echo -e "${red}5. 使用此功能生成的配置文件会自带审计，确定继续？(y/n)${plain}"
-    read -rp "请输入：" continue_prompt
+    echo -e "${yellow}V2bX config file wizard${plain}"
+    echo -e "${red}Please read the following notes:${plain}"
+    echo -e "${red}1. This feature is still in testing.${plain}"
+    echo -e "${red}2. The generated file is saved to /etc/V2bX/config.json.${plain}"
+    echo -e "${red}3. The previous file is saved to /etc/V2bX/config.json.bak.${plain}"
+    echo -e "${red}4. TLS support is only partial for now.${plain}"
+    echo -e "${red}5. The generated config includes audit rules. Continue? (y/n)${plain}"
+    read -rp "Please enter: " continue_prompt
     if [[ "$continue_prompt" =~ ^[Nn][Oo]? ]]; then
         exit 0
     fi
@@ -636,31 +636,31 @@ generate_config_file() {
     
     while true; do
         if [ "$first_node" = true ]; then
-            read -rp "请输入机场网址(https://example.com)：" ApiHost
-            read -rp "请输入面板对接API Key：" ApiKey
-            read -rp "是否设置固定的机场网址和API Key？(y/n)" fixed_api
+            read -rp "Please enter the panel URL (https://example.com): " ApiHost
+            read -rp "Please enter the panel API key: " ApiKey
+            read -rp "Use this panel URL and API key for every node? (y/n)" fixed_api
             if [ "$fixed_api" = "y" ] || [ "$fixed_api" = "Y" ]; then
                 fixed_api_info=true
-                echo -e "${red}成功固定地址${plain}"
+                echo -e "${red}The panel address is saved.${plain}"
             fi
             first_node=false
             add_node_config
         else
-            read -rp "是否继续添加节点配置？(回车继续，输入n或no退出)" continue_adding_node
+            read -rp "Add another node? (Press Enter to continue, or type n or no to finish)" continue_adding_node
             if [[ "$continue_adding_node" =~ ^[Nn][Oo]? ]]; then
                 break
             elif [ "$fixed_api_info" = false ]; then
-                read -rp "请输入机场网址：" ApiHost
-                read -rp "请输入面板对接API Key：" ApiKey
+                read -rp "Please enter the panel URL: " ApiHost
+                read -rp "Please enter the panel API key: " ApiKey
             fi
             add_node_config
         fi
     done
 
-    # 初始化核心配置数组
+    # Initialize the core config array
     cores_config="["
 
-    # 检查并添加xray核心配置
+    # Add the Xray core config when selected
     if [ "$core_xray" = true ]; then
         cores_config+="
     {
@@ -674,7 +674,7 @@ generate_config_file() {
     },"
     fi
 
-    # 检查并添加sing核心配置
+    # Add the sing-box core config when selected
     if [ "$core_sing" = true ]; then
         cores_config+="
     {
@@ -692,7 +692,7 @@ generate_config_file() {
     },"
     fi
 
-    # 检查并添加hysteria2核心配置
+    # Add the Hysteria2 core config when selected
     if [ "$core_hysteria2" = true ]; then
         cores_config+="
     {
@@ -703,19 +703,19 @@ generate_config_file() {
     },"
     fi
 
-    # 移除最后一个逗号并关闭数组
+    # Drop the trailing comma and close the array
     cores_config+="]"
     cores_config=$(echo "$cores_config" | sed 's/},]$/}]/')
 
-    # 切换到配置文件目录
+    # Change to the config directory
     cd /etc/V2bX
     
-    # 备份旧的配置文件
+    # Back up the previous config file
     mv config.json config.json.bak
     nodes_config_str="${nodes_config[*]}"
     formatted_nodes_config="${nodes_config_str%,}"
 
-    # 创建 config.json 文件
+    # Create config.json
     cat <<EOF > /etc/V2bX/config.json
 {
     "Log": {
@@ -727,7 +727,7 @@ generate_config_file() {
 }
 EOF
     
-    # 创建 custom_outbound.json 文件
+    # Create custom_outbound.json
     cat <<EOF > /etc/V2bX/custom_outbound.json
     [
         {
@@ -751,7 +751,7 @@ EOF
     ]
 EOF
     
-    # 创建 route.json 文件
+    # Create route.json
     cat <<EOF > /etc/V2bX/route.json
     {
         "domainStrategy": "AsIs",
@@ -818,7 +818,7 @@ EOF
     if [ "$ipv6_support" -eq 1 ]; then
         dnsstrategy="prefer_ipv4"
     fi
-    # 创建 sing_origin.json 文件
+    # Create sing_origin.json
     cat <<EOF > /etc/V2bX/sing_origin.json
 {
   "dns": {
@@ -893,7 +893,7 @@ EOF
 }
 EOF
 
-    # 创建 hy2config.yaml 文件           
+    # Create hy2config.yaml           
     cat <<EOF > /etc/V2bX/hy2config.yaml
 quic:
   initStreamReceiveWindow: 8388608
@@ -916,12 +916,12 @@ acl:
 masquerade:
   type: 404
 EOF
-    echo -e "${green}V2bX 配置文件生成完成，正在重新启动 V2bX 服务${plain}"
+    echo -e "${green}The config file is ready. Restarting V2bX.${plain}"
     restart 0
     before_show_menu
 }
 
-# 放开防火墙端口
+# Open firewall ports
 open_ports() {
     systemctl stop firewalld.service 2>/dev/null
     systemctl disable firewalld.service 2>/dev/null
@@ -935,60 +935,60 @@ open_ports() {
     iptables -F 2>/dev/null
     iptables -X 2>/dev/null
     netfilter-persistent save 2>/dev/null
-    echo -e "${green}放开防火墙端口成功！${plain}"
+    echo -e "${green}Firewall ports are now open.${plain}"
 }
 
 show_usage() {
-    echo "V2bX 管理脚本使用方法: "
+    echo "How to use the V2bX management script:"
     echo "------------------------------------------"
-    echo "V2bX              - 显示管理菜单 (功能更多)"
-    echo "V2bX start        - 启动 V2bX"
-    echo "V2bX stop         - 停止 V2bX"
-    echo "V2bX restart      - 重启 V2bX"
-    echo "V2bX status       - 查看 V2bX 状态"
-    echo "V2bX enable       - 设置 V2bX 开机自启"
-    echo "V2bX disable      - 取消 V2bX 开机自启"
-    echo "V2bX log          - 查看 V2bX 日志"
-    echo "V2bX x25519       - 生成 x25519 密钥"
-    echo "V2bX generate     - 生成 V2bX 配置文件"
-    echo "V2bX update       - 更新 V2bX"
-    echo "V2bX update x.x.x - 安装 V2bX 指定版本"
-    echo "V2bX install      - 安装 V2bX"
-    echo "V2bX uninstall    - 卸载 V2bX"
-    echo "V2bX version      - 查看 V2bX 版本"
+    echo "V2bX              - Show the management menu (more options)"
+    echo "V2bX start        - Start V2bX"
+    echo "V2bX stop         - Stop V2bX"
+    echo "V2bX restart      - Restart V2bX"
+    echo "V2bX status       - Show V2bX status"
+    echo "V2bX enable       - Enable start on boot"
+    echo "V2bX disable      - Disable start on boot"
+    echo "V2bX log          - View V2bX logs"
+    echo "V2bX x25519       - Generate an x25519 key"
+    echo "V2bX generate     - Generate a V2bX config file"
+    echo "V2bX update       - Update V2bX"
+    echo "V2bX update x.x.x - Install a specific V2bX version"
+    echo "V2bX install      - Install V2bX"
+    echo "V2bX uninstall    - Uninstall V2bX"
+    echo "V2bX version      - Show the V2bX version"
     echo "------------------------------------------"
 }
 
 show_menu() {
     echo -e "
-  ${green}V2bX 后端管理脚本，${plain}${red}不适用于docker${plain}
+  ${green}V2bX management script. ${plain}${red}Not for Docker${plain}
 --- https://github.com/MoonlessWanderer/V2bX ---
-  ${green}0.${plain} 修改配置
+  ${green}0.${plain} Edit config
 ————————————————
-  ${green}1.${plain} 安装 V2bX
-  ${green}2.${plain} 更新 V2bX
-  ${green}3.${plain} 卸载 V2bX
+  ${green}1.${plain} Install V2bX
+  ${green}2.${plain} Update V2bX
+  ${green}3.${plain} Uninstall V2bX
 ————————————————
-  ${green}4.${plain} 启动 V2bX
-  ${green}5.${plain} 停止 V2bX
-  ${green}6.${plain} 重启 V2bX
-  ${green}7.${plain} 查看 V2bX 状态
-  ${green}8.${plain} 查看 V2bX 日志
+  ${green}4.${plain} Start V2bX
+  ${green}5.${plain} Stop V2bX
+  ${green}6.${plain} Restart V2bX
+  ${green}7.${plain} Show V2bX status
+  ${green}8.${plain} View V2bX logs
 ————————————————
-  ${green}9.${plain} 设置 V2bX 开机自启
-  ${green}10.${plain} 取消 V2bX 开机自启
+  ${green}9.${plain} Enable start on boot
+  ${green}10.${plain} Disable start on boot
 ————————————————
-  ${green}11.${plain} 一键安装 bbr (最新内核)
-  ${green}12.${plain} 查看 V2bX 版本
-  ${green}13.${plain} 生成 X25519 密钥
-  ${green}14.${plain} 升级 V2bX 维护脚本
-  ${green}15.${plain} 生成 V2bX 配置文件
-  ${green}16.${plain} 放行 VPS 的所有网络端口
-  ${green}17.${plain} 退出脚本
+  ${green}11.${plain} Install BBR (latest kernel)
+  ${green}12.${plain} Show the V2bX version
+  ${green}13.${plain} Generate an X25519 key
+  ${green}14.${plain} Update the V2bX helper script
+  ${green}15.${plain} Generate a V2bX config file
+  ${green}16.${plain} Open all network ports on this VPS
+  ${green}17.${plain} Exit
  "
- #后续更新可加入上方字符串中
+ #Add new menu items above this line
     show_status
-    echo && read -rp "请输入选择 [0-17]: " num
+    echo && read -rp "Please choose an option [0-17]: " num
 
     case "${num}" in
         0) config ;;
@@ -1009,7 +1009,7 @@ show_menu() {
         15) generate_config_file ;;
         16) open_ports ;;
         17) exit ;;
-        *) echo -e "${red}请输入正确的数字 [0-16]${plain}" ;;
+        *) echo -e "${red}Please enter a number from 0 to 17${plain}" ;;
     esac
 }
 
