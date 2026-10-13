@@ -106,6 +106,7 @@ func (n *NodeConfig) UnmarshalJSON(data []byte) (err error) {
 
 type Options struct {
 	Name                   string          `json:"Name"`
+	Outbound               string          `json:"Outbound"`
 	Core                   string          `json:"Core"`
 	CoreName               string          `json:"CoreName"`
 	ListenIP               string          `json:"ListenIP"`

@@ -101,13 +101,15 @@ func (r *cachedReader) Interrupt() {
 
 // DefaultDispatcher is a default implementation of Dispatcher.
 type DefaultDispatcher struct {
-	ohm          outbound.Manager
-	router       routing.Router
-	policy       policy.Manager
-	stats        stats.Manager
-	fdns         dns.FakeDNSEngine
-	Counter      sync.Map
-	LinkManagers sync.Map // map[string]*LinkManager
+	ohm            outbound.Manager
+	router         routing.Router
+	policy         policy.Manager
+	stats          stats.Manager
+	fdns           dns.FakeDNSEngine
+	nodeOutboundMu sync.RWMutex
+	nodeOutbounds  map[string]string
+	Counter        sync.Map
+	LinkManagers   sync.Map // map[string]*LinkManager
 }
 
 func init() {
@@ -131,7 +133,40 @@ func (d *DefaultDispatcher) Init(config *Config, om outbound.Manager, router rou
 	d.router = router
 	d.policy = pm
 	d.stats = sm
+	d.nodeOutbounds = make(map[string]string)
 	return nil
+}
+
+// SetNodeOutbound sends traffic from inboundTag to outboundTag.
+// Route rules that select the block outbound still apply.
+func (d *DefaultDispatcher) SetNodeOutbound(inboundTag, outboundTag string) {
+	d.nodeOutboundMu.Lock()
+	defer d.nodeOutboundMu.Unlock()
+	if d.nodeOutbounds == nil {
+		d.nodeOutbounds = make(map[string]string)
+	}
+	d.nodeOutbounds[inboundTag] = outboundTag
+}
+
+// ClearNodeOutbound removes a per-node outbound choice.
+func (d *DefaultDispatcher) ClearNodeOutbound(inboundTag string) {
+	d.nodeOutboundMu.Lock()
+	defer d.nodeOutboundMu.Unlock()
+	delete(d.nodeOutbounds, inboundTag)
+}
+
+func (d *DefaultDispatcher) nodeOutbound(inboundTag string) string {
+	d.nodeOutboundMu.RLock()
+	defer d.nodeOutboundMu.RUnlock()
+	return d.nodeOutbounds[inboundTag]
+}
+
+// chooseNodeOutbound keeps a block result and otherwise uses the node's outbound.
+func chooseNodeOutbound(routeTag, nodeOutbound string) (string, bool) {
+	if nodeOutbound == "" || routeTag == "block" {
+		return routeTag, false
+	}
+	return nodeOutbound, true
 }
 
 // Type implements common.HasType.
@@ -593,6 +628,27 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 		handler = d.ohm.GetDefaultHandler()
 	}
 
+	routeTag := ""
+	if handler != nil {
+		routeTag = handler.Tag()
+	}
+	nodeTag := inTag
+	if sessionInbound != nil && sessionInbound.Tag != "" {
+		nodeTag = sessionInbound.Tag
+	}
+	if nodeOut, override := chooseNodeOutbound(routeTag, d.nodeOutbound(nodeTag)); override {
+		if h := d.ohm.GetHandler(nodeOut); h != nil {
+			handler = h
+			isPickRoute = 3
+			errors.LogInfo(ctx, "node [", nodeTag, "] uses outbound [", nodeOut, "] for [", destination, "]")
+		} else {
+			errors.LogWarning(ctx, "node outbound does not exist: ", nodeOut)
+			common.Close(link.Writer)
+			common.Interrupt(link.Reader)
+			return
+		}
+	}
+
 	if handler == nil {
 		errors.LogInfo(ctx, "default outbound handler not exist")
 		common.Close(link.Writer)
@@ -609,6 +665,8 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 				accessMessage.Detour = inTag + " ==> " + tag
 			} else if isPickRoute == 2 {
 				accessMessage.Detour = inTag + " -> " + tag
+			} else if isPickRoute == 3 {
+				accessMessage.Detour = inTag + " => " + tag
 			} else {
 				accessMessage.Detour = inTag + " >> " + tag
 			}

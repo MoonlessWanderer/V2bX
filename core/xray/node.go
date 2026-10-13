@@ -3,9 +3,11 @@ package xray
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/InazumaV/V2bX/api/panel"
 	"github.com/InazumaV/V2bX/conf"
+	log "github.com/sirupsen/logrus"
 	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/inbound"
 	"github.com/xtls/xray-core/features/outbound"
@@ -37,6 +39,14 @@ func (c *Xray) AddNode(tag string, info *panel.NodeInfo, config *conf.Options) e
 	err = c.addOutbound(outBoundConfig)
 	if err != nil {
 		return fmt.Errorf("add outbound error: %s", err)
+	}
+	if out := strings.TrimSpace(config.Outbound); out != "" {
+		if c.ohm.GetHandler(out) == nil {
+			_ = c.DelNode(tag)
+			return fmt.Errorf("outbound %q is not defined in custom_outbound.json", out)
+		}
+		c.dispatcher.SetNodeOutbound(tag, out)
+		log.WithField("tag", tag).Info("node traffic uses outbound ", out)
 	}
 	return nil
 }
@@ -72,6 +82,9 @@ func (c *Xray) addOutbound(config *core.OutboundHandlerConfig) error {
 }
 
 func (c *Xray) DelNode(tag string) error {
+	if c.dispatcher != nil {
+		c.dispatcher.ClearNodeOutbound(tag)
+	}
 	err := c.removeInbound(tag)
 	if err != nil {
 		return fmt.Errorf("remove in error: %s", err)
