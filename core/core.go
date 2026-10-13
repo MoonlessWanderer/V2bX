@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/InazumaV/V2bX/conf"
 )
@@ -21,8 +22,16 @@ func NewCore(c []conf.CoreConfig) (Core, error) {
 	// one core
 	if f, ok := cores[c[0].Type]; ok {
 		return f(&c[0])
-	} else {
-		return nil, errors.New("unknown core type")
+	}
+	return nil, unregisteredCore(c[0].Type)
+}
+
+func unregisteredCore(coreType string) error {
+	switch strings.ToLower(coreType) {
+	case "sing", "hysteria2":
+		return errors.New(coreType + " is temporarily disabled in this build. Use the xray core")
+	default:
+		return errors.New("unknown core type: " + coreType)
 	}
 }
 

@@ -20,7 +20,7 @@ func NewSelector(c []conf.CoreConfig) (Core, error) {
 	for _, t := range c {
 		f, ok := cores[strings.ToLower(t.Type)]
 		if !ok {
-			return nil, errors.New("unknown core type: " + t.Type)
+			return nil, unregisteredCore(t.Type)
 		}
 		core1, err := f(&t)
 		if err != nil {

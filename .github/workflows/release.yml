@@ -52,7 +52,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.0'
+          go-version: '1.27.2'
 
       - name: Get project dependencies
         run: |
@@ -69,7 +69,7 @@ jobs:
         run: |
           echo "version: $version"
           mkdir -p build_assets
-          GOEXPERIMENT=jsonv2 go build -v -o build_assets/V2bX -tags "sing xray hysteria2 with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/InazumaV/V2bX/cmd.version=$version' -s -w -buildid="
+          GOEXPERIMENT=jsonv2 go build -v -o build_assets/V2bX -tags "xray" -trimpath -ldflags "-X 'github.com/InazumaV/V2bX/cmd.version=$version' -s -w -buildid="
 
       - name: Prepare to release
         run: |

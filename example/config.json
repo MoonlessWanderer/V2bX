@@ -5,22 +5,17 @@
   },
   "Cores": [
     {
-      "Type": "sing",
+      "Type": "xray",
       "Log": {
-        "Level": "info",
-        "Timestamp": true
-      },
-      "NTP": {
-        "Enable": false,
-        "Server": "time.apple.com",
-        "ServerPort": 0
-      },
-      "OriginalPath": "/etc/V2bX/sing_origin.json"
+        "Level": "warning",
+        "AccessPath": "",
+        "ErrorPath": ""
+      }
     }
   ],
   "Nodes": [
     {
-      "Core": "sing",
+      "Core": "xray",
       "ApiHost": "http://127.0.0.1",
       "ApiKey": "test",
       "NodeID": 33,

@@ -1,13 +1,13 @@
 # V2bX
 
-A V2board node server with more than one core, based on XrayR. It supports VMess, VLESS, Trojan, Shadowsocks, Hysteria, and Hysteria2.
+A V2board node server with more than one core, based on XrayR. The current build runs the Xray core and supports VMess, VLESS, Trojan, and Shadowsocks. sing-box and Hysteria2 are temporarily disabled.
 
 This project is meant to be used with a [modified V2board](https://github.com/wyx2685/v2board).
 
 ## Features
 
 * Free and open source.
-* VMess, VLESS, Trojan, Shadowsocks, and Hysteria 1/2.
+* VMess, VLESS, Trojan, and Shadowsocks on the Xray core. sing-box and Hysteria2 are temporarily disabled.
 * VLESS, XTLS, and related newer options.
 * One process can serve several nodes.
 * Limit online IP addresses.
@@ -55,8 +55,9 @@ See the [manual install guide](https://v2bx.v-50.me/v2bx/v2bx-xia-zai-he-an-zhua
 ## Build
 
 ```bash
-# Choose cores with -tags. Options: xray, sing, hysteria2
-GOEXPERIMENT=jsonv2 go build -v -o build_assets/V2bX -tags "sing xray hysteria2 with_quic with_grpc with_utls with_wireguard with_acme with_gvisor" -trimpath -ldflags "-X 'github.com/InazumaV/V2bX/cmd.version=$version' -s -w -buildid="
+# This Xray build uses Go 1.27. sing-box and Hysteria2 are not linked:
+# this Xray requires sagernet/sing v0.9.6, which those cores do not compile against.
+GOEXPERIMENT=jsonv2 go build -v -o build_assets/V2bX -tags "xray" -trimpath -ldflags "-X 'github.com/InazumaV/V2bX/cmd.version=$version' -s -w -buildid="
 ```
 
 ## Config and guide

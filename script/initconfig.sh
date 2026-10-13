@@ -11,24 +11,23 @@ check_ipv6_support() {
 }
 
 add_node_config() {
-    echo -e "${green}Please choose a node core:${plain}"
-    echo -e "${green}1. xray${plain}"
-    echo -e "${green}2. singbox${plain}"
-    echo -e "${green}3. hysteria2${plain}"
-    read -rp "Please enter: " core_type
-    if [ "$core_type" == "1" ]; then
-        core="xray"
-        core_xray=true
-    elif [ "$core_type" == "2" ]; then
-        core="sing"
-        core_sing=true
-    elif [ "$core_type" == "3" ]; then
-        core="hysteria2"
-        core_hysteria2=true
-    else
-        echo "That choice is not valid. Please choose 1, 2, or 3."
-        continue
-    fi
+    while true; do
+        echo -e "${green}Please choose a node core:${plain}"
+        echo -e "${yellow}sing-box and Hysteria2 are temporarily unavailable. Please choose Xray.${plain}"
+        echo -e "${green}1. xray${plain}"
+        echo -e "${green}2. sing-box (temporarily unavailable)${plain}"
+        echo -e "${green}3. hysteria2 (temporarily unavailable)${plain}"
+        read -rp "Please enter: " core_type
+        if [ "$core_type" == "1" ]; then
+            core="xray"
+            core_xray=true
+            break
+        elif [ "$core_type" == "2" ] || [ "$core_type" == "3" ]; then
+            echo -e "${red}sing-box and Hysteria2 are temporarily disabled in this build. Please choose Xray (1).${plain}"
+        else
+            echo "That choice is not valid. Please choose 1."
+        fi
+    done
     while true; do
         read -rp "Please enter the node ID: " NodeID
         # Node ID must be a positive integer
@@ -39,38 +38,21 @@ add_node_config() {
         fi
     done
 
-    if [ "$core_hysteria2" = true ] && [ "$core_xray" = false ] && [ "$core_sing" = false ]; then
-        NodeType="hysteria2"
-    else
+    while true; do
         echo -e "${yellow}Please choose a transport protocol:${plain}"
         echo -e "${green}1. Shadowsocks${plain}"
         echo -e "${green}2. Vless${plain}"
         echo -e "${green}3. Vmess${plain}"
-        if [ "$core_sing" == true ]; then
-            echo -e "${green}4. Hysteria${plain}"
-            echo -e "${green}5. Hysteria2${plain}"
-        fi
-        if [ "$core_hysteria2" == true ] && [ "$core_sing" = false ]; then
-            echo -e "${green}5. Hysteria2${plain}"
-        fi
-        echo -e "${green}6. Trojan${plain}"  
-        if [ "$core_sing" == true ]; then
-            echo -e "${green}7. Tuic${plain}"
-            echo -e "${green}8. AnyTLS${plain}"
-        fi
+        echo -e "${green}4. Trojan${plain}"
         read -rp "Please enter: " NodeType
         case "$NodeType" in
-            1 ) NodeType="shadowsocks" ;;
-            2 ) NodeType="vless" ;;
-            3 ) NodeType="vmess" ;;
-            4 ) NodeType="hysteria" ;;
-            5 ) NodeType="hysteria2" ;;
-            6 ) NodeType="trojan" ;;
-            7 ) NodeType="tuic" ;;
-            8 ) NodeType="anytls" ;;
-            * ) NodeType="shadowsocks" ;;
+            1 ) NodeType="shadowsocks"; break ;;
+            2 ) NodeType="vless"; break ;;
+            3 ) NodeType="vmess"; break ;;
+            4 ) NodeType="trojan"; break ;;
+            * ) echo -e "${red}That choice is not valid. Xray supports Shadowsocks, Vless, Vmess, and Trojan.${plain}" ;;
         esac
-    fi
+    done
     fastopen=true
     if [ "$NodeType" == "vless" ]; then
         read -rp "Is this a Reality node? (y/n)" isreality
@@ -209,7 +191,8 @@ generate_config_file() {
     echo -e "${red}2. The generated file is saved to /etc/V2bX/config.json.${plain}"
     echo -e "${red}3. The previous file is saved to /etc/V2bX/config.json.bak.${plain}"
     echo -e "${red}4. TLS support is only partial for now.${plain}"
-    echo -e "${red}5. The generated config includes audit rules. Continue? (y/n)${plain}"
+    echo -e "${red}5. The generated config includes audit rules.${plain}"
+    echo -e "${red}6. sing-box and Hysteria2 are temporarily disabled. New nodes use the Xray core. Continue? (y/n)${plain}"
     read -rp "Please enter: " continue_prompt
     if [[ "$continue_prompt" =~ ^[Nn][Oo]? ]]; then
         exit 0

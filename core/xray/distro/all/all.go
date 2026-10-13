@@ -53,6 +53,7 @@ import (
 
 	// Transports
 	_ "github.com/xtls/xray-core/transport/internet/grpc"
+	_ "github.com/xtls/xray-core/transport/internet/httpupgrade"
 	_ "github.com/xtls/xray-core/transport/internet/kcp"
 	_ "github.com/xtls/xray-core/transport/internet/reality"
 	_ "github.com/xtls/xray-core/transport/internet/splithttp"
@@ -61,12 +62,8 @@ import (
 	_ "github.com/xtls/xray-core/transport/internet/udp"
 	_ "github.com/xtls/xray-core/transport/internet/websocket"
 
-	// Transport headers
+	// Transport headers. srtp, utp, wechat, wireguard, and tls headers
+	// moved into finalmask and are no longer separate packages.
 	_ "github.com/xtls/xray-core/transport/internet/headers/http"
 	_ "github.com/xtls/xray-core/transport/internet/headers/noop"
-	_ "github.com/xtls/xray-core/transport/internet/headers/srtp"
-	_ "github.com/xtls/xray-core/transport/internet/headers/tls"
-	_ "github.com/xtls/xray-core/transport/internet/headers/utp"
-	_ "github.com/xtls/xray-core/transport/internet/headers/wechat"
-	_ "github.com/xtls/xray-core/transport/internet/headers/wireguard"
 )
