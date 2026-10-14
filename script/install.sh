@@ -78,23 +78,23 @@ fi
 
 install_base() {
     if [[ x"${release}" == x"centos" ]]; then
-        yum install epel-release wget curl unzip tar crontabs socat ca-certificates -y >/dev/null 2>&1
+        yum install epel-release wget curl unzip tar crontabs socat ca-certificates logrotate -y >/dev/null 2>&1
         update-ca-trust force-enable >/dev/null 2>&1
     elif [[ x"${release}" == x"alpine" ]]; then
-        apk add wget curl unzip tar socat ca-certificates >/dev/null 2>&1
+        apk add wget curl unzip tar socat ca-certificates logrotate >/dev/null 2>&1
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"debian" ]]; then
         apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat ca-certificates -y >/dev/null 2>&1
+        apt install wget curl unzip tar cron socat ca-certificates logrotate -y >/dev/null 2>&1
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"ubuntu" ]]; then
         apt-get update -y >/dev/null 2>&1
-        apt install wget curl unzip tar cron socat -y >/dev/null 2>&1
+        apt install wget curl unzip tar cron socat logrotate -y >/dev/null 2>&1
         apt-get install ca-certificates wget -y >/dev/null 2>&1
         update-ca-certificates >/dev/null 2>&1
     elif [[ x"${release}" == x"arch" ]]; then
         pacman -Sy --noconfirm >/dev/null 2>&1
-        pacman -S --noconfirm --needed wget curl unzip tar cron socat >/dev/null 2>&1
+        pacman -S --noconfirm --needed wget curl unzip tar cron socat logrotate >/dev/null 2>&1
         pacman -S --noconfirm --needed ca-certificates wget >/dev/null 2>&1
     fi
 }
@@ -112,12 +112,36 @@ check_status() {
             return 1
         fi
     else
-        temp=$(systemctl status V2bX | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-        if [[ x"${temp}" == x"running" ]]; then
+        if systemctl is-active V2bX >/dev/null 2>&1; then
             return 0
         else
             return 1
         fi
+    fi
+}
+
+limit_logs() {
+    cat > /etc/logrotate.d/v2bx <<'EOF'
+/etc/V2bX/error.log
+/etc/V2bX/access.log {
+    daily
+    rotate 3
+    maxsize 50M
+    missingok
+    notifempty
+    copytruncate
+    compress
+    delaycompress
+}
+EOF
+    if [[ x"${release}" != x"alpine" ]]; then
+        mkdir -p /etc/systemd/journald.conf.d
+        cat > /etc/systemd/journald.conf.d/v2bx.conf <<'EOF'
+[Journal]
+SystemMaxUse=1G
+SystemMaxFileSize=50M
+EOF
+        systemctl restart systemd-journald >/dev/null 2>&1 || true
     fi
 }
 
@@ -209,6 +233,8 @@ EOF
         systemctl enable V2bX
         echo -e "${green}V2bX ${last_version}${plain} is installed and will start on boot."
     fi
+
+    limit_logs
 
     if [[ ! -f /etc/V2bX/config.json ]]; then
         cp config.json /etc/V2bX/

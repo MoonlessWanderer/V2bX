@@ -125,7 +125,11 @@ update() {
 
 config() {
     echo "V2bX will try to restart automatically after you save the config."
-    vi /etc/V2bX/config.json
+    if command -v nano >/dev/null 2>&1; then
+        nano /etc/V2bX/config.json
+    else
+        vi /etc/V2bX/config.json
+    fi
     sleep 2
     restart
     check_status
@@ -324,8 +328,8 @@ check_status() {
             return 1
         fi
     else
-        temp=$(systemctl status V2bX | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1)
-        if [[ x"${temp}" == x"running" ]]; then
+        # The status line is translated, so "Active" is not reliable. The exit code is.
+        if systemctl is-active V2bX >/dev/null 2>&1; then
             return 0
         else
             return 1
@@ -342,7 +346,7 @@ check_enabled() {
             return 0
         fi
     else
-        temp=$(systemctl is-enabled V2bX)
+        temp=$(systemctl is-enabled V2bX 2>/dev/null)
         if [[ x"${temp}" == x"enabled" ]]; then
             return 0
         else
@@ -423,23 +427,9 @@ show_V2bX_version() {
 }
 
 add_node_config() {
-    while true; do
-        echo -e "${green}Please choose a node core:${plain}"
-        echo -e "${yellow}sing-box and Hysteria2 are temporarily unavailable. Please choose Xray.${plain}"
-        echo -e "${green}1. xray${plain}"
-        echo -e "${green}2. sing-box (temporarily unavailable)${plain}"
-        echo -e "${green}3. hysteria2 (temporarily unavailable)${plain}"
-        read -rp "Please enter: " core_type
-        if [ "$core_type" == "1" ]; then
-            core="xray"
-            core_xray=true
-            break
-        elif [ "$core_type" == "2" ] || [ "$core_type" == "3" ]; then
-            echo -e "${red}sing-box and Hysteria2 are temporarily disabled in this build. Please choose Xray (1).${plain}"
-        else
-            echo "That choice is not valid. Please choose 1."
-        fi
-    done
+    core_type="1"
+    core="xray"
+    core_xray=true
     while true; do
         read -rp "Please enter the node ID: " NodeID
         # Node ID must be a positive integer
@@ -651,6 +641,7 @@ generate_config_file() {
         \"Type\": \"xray\",
         \"Log\": {
             \"Level\": \"error\",
+            \"AccessPath\": \"none\",
             \"ErrorPath\": \"/etc/V2bX/error.log\"
         },
         \"OutboundConfigPath\": \"/etc/V2bX/custom_outbound.json\",
@@ -925,7 +916,7 @@ open_ports() {
 show_usage() {
     echo "How to use the V2bX management script:"
     echo "------------------------------------------"
-    echo "V2bX              - Show the management menu (more options)"
+    echo "V2bX              - Show the management menu"
     echo "V2bX start        - Start V2bX"
     echo "V2bX stop         - Stop V2bX"
     echo "V2bX restart      - Restart V2bX"
@@ -943,58 +934,111 @@ show_usage() {
     echo "------------------------------------------"
 }
 
-show_menu() {
-    echo -e "
-  ${green}V2bX management script. ${plain}${red}Not for Docker${plain}
---- https://github.com/MoonlessWanderer/V2bX ---
-  ${green}0.${plain} Edit config
-————————————————
-  ${green}1.${plain} Install V2bX
-  ${green}2.${plain} Update V2bX
-  ${green}3.${plain} Uninstall V2bX
-————————————————
-  ${green}4.${plain} Start V2bX
-  ${green}5.${plain} Stop V2bX
-  ${green}6.${plain} Restart V2bX
-  ${green}7.${plain} Show V2bX status
-  ${green}8.${plain} View V2bX logs
-————————————————
-  ${green}9.${plain} Enable start on boot
-  ${green}10.${plain} Disable start on boot
-————————————————
-  ${green}11.${plain} Install BBR (latest kernel)
-  ${green}12.${plain} Show the V2bX version
-  ${green}13.${plain} Generate an X25519 key
-  ${green}14.${plain} Update the V2bX helper script
-  ${green}15.${plain} Generate a V2bX config file
-  ${green}16.${plain} Open all network ports on this VPS
-  ${green}17.${plain} Exit
- "
- #Add new menu items above this line
-    show_status
-    echo && read -rp "Please choose an option [0-17]: " num
+# Prints V2bX and Xray version lines. The ASCII banner from `V2bX version` is ignored.
+# An older binary that does not print an Xray line leaves that row out.
+format_version_header() {
+    local ver_out=$1
+    local v2bx_ver xray_ver
+    v2bx_ver=$(printf '%s\n' "$ver_out" | awk '/^V2bX / { print $2; exit }')
+    xray_ver=$(printf '%s\n' "$ver_out" | awk '/^Xray / { print $2; exit }')
+    if [[ -n "$v2bx_ver" ]]; then
+        printf 'V2bX %s\n' "$v2bx_ver"
+    else
+        printf 'V2bX\n'
+    fi
+    if [[ -n "$xray_ver" ]]; then
+        printf 'Xray %s\n' "$xray_ver"
+    fi
+}
 
-    case "${num}" in
-        0) config ;;
-        1) check_uninstall && install ;;
-        2) check_install && update ;;
-        3) check_install && uninstall ;;
-        4) check_install && start ;;
-        5) check_install && stop ;;
-        6) check_install && restart ;;
-        7) check_install && status ;;
-        8) check_install && show_log ;;
-        9) check_install && enable ;;
-        10) check_install && disable ;;
-        11) install_bbr ;;
-        12) check_install && show_V2bX_version ;;
-        13) check_install && generate_x25519_key ;;
-        14) update_shell ;;
-        15) generate_config_file ;;
-        16) open_ports ;;
-        17) exit ;;
-        *) echo -e "${red}Please enter a number from 0 to 17${plain}" ;;
-    esac
+# One "label|action" line per visible row. Numbers are assigned later, in order.
+# status: 0 running, 1 stopped, 2 not installed. enabled: 0 boot on, otherwise off.
+menu_entries() {
+    local status=$1
+    local enabled=$2
+    if [[ $status -eq 2 ]]; then
+        echo "Install|install"
+        return
+    fi
+    echo "Uninstall|uninstall"
+    if [[ $status -eq 0 ]]; then
+        echo "Restart|restart"
+        echo "Stop|stop"
+    else
+        echo "Start|start"
+    fi
+    echo "Update|update"
+    echo "Generate config|generate_config_file"
+    echo "Logs|show_log"
+    echo "Edit config|config"
+    echo "X25519 key|generate_x25519_key"
+    if [[ $enabled -eq 0 ]]; then
+        echo "No boot start|disable"
+    else
+        echo "Start on boot|enable"
+    fi
+}
+
+show_menu() {
+    local status enabled boot_text status_word status_color
+    local menu_labels=() menu_actions=()
+    local line num choice i
+
+    enabled=1
+    check_status
+    status=$?
+
+    if [[ $status -eq 2 ]]; then
+        echo "V2bX"
+        echo -e "${red}not installed${plain}"
+    else
+        format_version_header "$(/usr/local/V2bX/V2bX version 2>/dev/null)"
+        check_enabled
+        enabled=$?
+        if [[ $status -eq 0 ]]; then
+            status_word="running"
+            status_color="$green"
+        else
+            status_word="stopped"
+            status_color="$yellow"
+        fi
+        if [[ $enabled -eq 0 ]]; then
+            boot_text="starts on boot"
+        else
+            boot_text="no boot start"
+        fi
+        echo -e "${status_color}${status_word}${plain}    ${boot_text}"
+    fi
+    echo
+
+    while IFS= read -r line; do
+        menu_labels+=("${line%%|*}")
+        menu_actions+=("${line#*|}")
+    done < <(menu_entries "$status" "$enabled")
+
+    i=1
+    for line in "${menu_labels[@]}"; do
+        printf ' %d  %s\n' "$i" "$line"
+        i=$((i + 1))
+    done
+    echo " 0  Exit"
+    echo
+    read -r -p "Please choose an option: " num
+    num="${num#"${num%%[![:space:]]*}"}"
+    num="${num%"${num##*[![:space:]]}"}"
+
+    if [[ "$num" == "0" ]]; then
+        exit 0
+    fi
+    if [[ "$num" =~ ^[0-9]+$ ]]; then
+        choice=$((10#$num))
+        if [[ $choice -ge 1 && $choice -le ${#menu_actions[@]} ]]; then
+            "${menu_actions[$((choice - 1))]}"
+            return
+        fi
+    fi
+    echo -e "${red}Please enter a number from the list.${plain}"
+    show_menu
 }
 
 

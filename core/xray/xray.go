@@ -69,10 +69,15 @@ func parseConnectionConfig(c *conf.XrayConnectionConfig) (policy *coreConf.Polic
 
 func getCore(c *conf.XrayConfig) *core.Instance {
 	os.Setenv("XRAY_LOCATION_ASSET", c.AssetPath)
-	// Log Config
+	// An empty access path must not fall through to Xray's console default.
+	// That default writes one line per connection to stdout, and journald keeps it under /var/log.
+	accessLog := c.LogConfig.AccessPath
+	if accessLog == "" {
+		accessLog = "none"
+	}
 	coreLogConfig := &coreConf.LogConfig{
 		LogLevel:  c.LogConfig.Level,
-		AccessLog: c.LogConfig.AccessPath,
+		AccessLog: accessLog,
 		ErrorLog:  c.LogConfig.ErrorPath,
 	}
 	// DNS config

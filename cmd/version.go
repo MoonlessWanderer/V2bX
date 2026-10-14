@@ -33,6 +33,9 @@ _/      _/      _/    _/    _/      _/
   _/      _/_/_/_/  _/_/_/    _/      _/        
                                                 `)
 	fmt.Printf("%s %s (%s) \n", codename, version, intro)
+	if xray := xrayVersion(); xray != "" {
+		fmt.Printf("Xray %s\n", xray)
+	}
 	//fmt.Printf("Supported cores: %s\n", strings.Join(vCore.RegisteredCore(), ", "))
 	// Warning
 	//fmt.Println(Warn("This version need V2board version >= 1.7.0."))

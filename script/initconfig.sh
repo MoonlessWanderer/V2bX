@@ -11,23 +11,9 @@ check_ipv6_support() {
 }
 
 add_node_config() {
-    while true; do
-        echo -e "${green}Please choose a node core:${plain}"
-        echo -e "${yellow}sing-box and Hysteria2 are temporarily unavailable. Please choose Xray.${plain}"
-        echo -e "${green}1. xray${plain}"
-        echo -e "${green}2. sing-box (temporarily unavailable)${plain}"
-        echo -e "${green}3. hysteria2 (temporarily unavailable)${plain}"
-        read -rp "Please enter: " core_type
-        if [ "$core_type" == "1" ]; then
-            core="xray"
-            core_xray=true
-            break
-        elif [ "$core_type" == "2" ] || [ "$core_type" == "3" ]; then
-            echo -e "${red}sing-box and Hysteria2 are temporarily disabled in this build. Please choose Xray (1).${plain}"
-        else
-            echo "That choice is not valid. Please choose 1."
-        fi
-    done
+    core_type="1"
+    core="xray"
+    core_xray=true
     while true; do
         read -rp "Please enter the node ID: " NodeID
         # Node ID must be a positive integer
@@ -240,6 +226,7 @@ generate_config_file() {
         \"Type\": \"xray\",
         \"Log\": {
             \"Level\": \"error\",
+            \"AccessPath\": \"none\",
             \"ErrorPath\": \"/etc/V2bX/error.log\"
         },
         \"OutboundConfigPath\": \"/etc/V2bX/custom_outbound.json\",
