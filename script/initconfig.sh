@@ -226,7 +226,7 @@ generate_config_file() {
         \"Type\": \"xray\",
         \"Log\": {
             \"Level\": \"error\",
-            \"AccessPath\": \"none\",
+            \"AccessPath\": \"/etc/V2bX/access.log\",
             \"ErrorPath\": \"/etc/V2bX/error.log\"
         },
         \"OutboundConfigPath\": \"/etc/V2bX/custom_outbound.json\",

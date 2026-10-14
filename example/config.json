@@ -8,7 +8,7 @@
       "Type": "xray",
       "Log": {
         "Level": "warning",
-        "AccessPath": "none",
+        "AccessPath": "/etc/V2bX/access.log",
         "ErrorPath": ""
       }
     }

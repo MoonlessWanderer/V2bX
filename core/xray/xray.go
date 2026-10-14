@@ -71,9 +71,10 @@ func getCore(c *conf.XrayConfig) *core.Instance {
 	os.Setenv("XRAY_LOCATION_ASSET", c.AssetPath)
 	// An empty access path must not fall through to Xray's console default.
 	// That default writes one line per connection to stdout, and journald keeps it under /var/log.
+	// The managed file is rotated by logrotate and followed live by "V2bX log".
 	accessLog := c.LogConfig.AccessPath
 	if accessLog == "" {
-		accessLog = "none"
+		accessLog = "/etc/V2bX/access.log"
 	}
 	coreLogConfig := &coreConf.LogConfig{
 		LogLevel:  c.LogConfig.Level,
