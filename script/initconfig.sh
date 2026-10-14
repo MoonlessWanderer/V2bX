@@ -291,17 +291,12 @@ EOF
     cat <<EOF > /etc/V2bX/custom_outbound.json
 [
     {
-        "tag": "IPv4_out",
+        "tag": "direct",
         "protocol": "freedom",
-        "settings": {
-            "domainStrategy": "ForceIPv4"
-        }
-    },
-    {
-        "tag": "IPv6_out",
-        "protocol": "freedom",
-        "settings": {
-            "domainStrategy": "UseIPv6"
+        "streamSettings": {
+            "sockopt": {
+                "domainStrategy": "ForceIPv4"
+            }
         }
     },
     {
@@ -366,7 +361,7 @@ EOF
             ]
         },
         {
-            "outboundTag": "IPv4_out",
+            "outboundTag": "direct",
             "network": "udp,tcp"
         }
     ]

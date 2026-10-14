@@ -8,8 +8,8 @@ func TestChooseNodeOutbound(t *testing.T) {
 		want        string
 		override    bool
 	}{
-		{route: "IPv4_out", node: "", want: "IPv4_out", override: false},
-		{route: "IPv4_out", node: "wireguard", want: "wireguard", override: true},
+		{route: "direct", node: "", want: "direct", override: false},
+		{route: "direct", node: "wireguard", want: "wireguard", override: true},
 		{route: "block", node: "wireguard", want: "block", override: false},
 		{route: "", node: "wireguard", want: "wireguard", override: true},
 	}

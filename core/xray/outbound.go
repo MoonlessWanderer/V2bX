@@ -1,9 +1,7 @@
 package xray
 
 import (
-	"fmt"
-
-	"encoding/json"
+	"strings"
 
 	conf2 "github.com/InazumaV/V2bX/conf"
 	"github.com/xtls/xray-core/core"
@@ -21,8 +19,8 @@ func buildOutbound(config *conf2.Options, tag string) (*core.OutboundHandlerConf
 		outboundDetourConfig.SendThrough = &config.SendIP
 	}
 
-	// Freedom Protocol setting
-	var domainStrategy = "Asis"
+	// Freedom's own domainStrategy is deprecated. The same value now belongs on sockopt.
+	var domainStrategy = "AsIs"
 	if config.XrayOptions.EnableDNS {
 		if config.XrayOptions.DNSType != "" {
 			domainStrategy = config.XrayOptions.DNSType
@@ -30,14 +28,12 @@ func buildOutbound(config *conf2.Options, tag string) (*core.OutboundHandlerConf
 			domainStrategy = "UseIP"
 		}
 	}
-	proxySetting := &conf.FreedomConfig{
-		DomainStrategy: domainStrategy,
+	if !strings.EqualFold(domainStrategy, "AsIs") {
+		outboundDetourConfig.StreamSetting = &conf.StreamConfig{
+			SocketSettings: &conf.SocketConfig{
+				DomainStrategy: domainStrategy,
+			},
+		}
 	}
-	var setting json.RawMessage
-	setting, err := json.Marshal(proxySetting)
-	if err != nil {
-		return nil, fmt.Errorf("marshal proxy config error: %s", err)
-	}
-	outboundDetourConfig.Settings = &setting
 	return outboundDetourConfig.Build()
 }

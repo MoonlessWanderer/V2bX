@@ -10,9 +10,9 @@ import (
 func TestCustomOutboundProtocolsBuild(t *testing.T) {
 	cases := map[string]string{
 		"freedom": `{
-			"tag": "IPv4_out",
+			"tag": "direct",
 			"protocol": "freedom",
-			"settings": {"domainStrategy": "ForceIPv4"}
+			"streamSettings": {"sockopt": {"domainStrategy": "ForceIPv4"}}
 		}`,
 		"wireguard": `{
 			"tag": "wireguard",
