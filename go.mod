@@ -20,8 +20,8 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	github.com/xtls/xray-core v1.251202.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.57.0
-	golang.org/x/sys v0.48.0
+	golang.org/x/crypto v0.58.0
+	golang.org/x/sys v0.49.0
 	google.golang.org/protobuf v1.36.12
 )
 
@@ -316,13 +316,13 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/term v0.46.0 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/term v0.47.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.49.0 // indirect
+	golang.org/x/tools v0.51.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb // indirect
 	golang.zx2c4.com/wireguard/windows v1.1.1 // indirect
