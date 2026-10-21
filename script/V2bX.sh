@@ -291,43 +291,9 @@ disable() {
 show_log() {
     if [[ x"${release}" == x"alpine" ]]; then
         echo -e "${red}Log viewing is not available on Alpine yet.${plain}\n" && exit 1
-    fi
-
-    local access_path journal_pid="" access_pid=""
-    access_path=$(awk -F'"' '/"AccessPath"/ { print $4; exit }' /etc/V2bX/config.json 2>/dev/null)
-
-    stop_log_follow() {
-        local pid
-        for pid in "$journal_pid" "$access_pid"; do
-            if [[ -n "$pid" ]]; then
-                kill "$pid" 2>/dev/null
-            fi
-        done
-        for pid in "$journal_pid" "$access_pid"; do
-            if [[ -n "$pid" ]]; then
-                wait "$pid" 2>/dev/null
-            fi
-        done
-        journal_pid=""
-        access_pid=""
-    }
-
-    echo -e "${green}Service log.${plain} Press Ctrl+C to stop."
-    if [[ -z "$access_path" || "$access_path" == "none" ]]; then
-        echo -e "${yellow}User requests are off. Set AccessPath to /etc/V2bX/access.log in /etc/V2bX/config.json, then restart.${plain}"
     else
-        echo -e "${green}User requests: ${access_path}${plain}"
-        tail -n 20 -F "$access_path" &
-        access_pid=$!
+        journalctl -u V2bX.service -e --no-pager -f
     fi
-    journalctl -u V2bX.service -n 30 --no-pager -f &
-    journal_pid=$!
-
-    trap 'stop_log_follow' INT TERM
-    wait "$journal_pid" 2>/dev/null
-    stop_log_follow
-    trap - INT TERM
-
     if [[ $# == 0 ]]; then
         before_show_menu
     fi
@@ -675,7 +641,6 @@ generate_config_file() {
         \"Type\": \"xray\",
         \"Log\": {
             \"Level\": \"error\",
-            \"AccessPath\": \"/etc/V2bX/access.log\",
             \"ErrorPath\": \"/etc/V2bX/error.log\"
         },
         \"OutboundConfigPath\": \"/etc/V2bX/custom_outbound.json\",

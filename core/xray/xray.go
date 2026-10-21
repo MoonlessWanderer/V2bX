@@ -69,16 +69,11 @@ func parseConnectionConfig(c *conf.XrayConnectionConfig) (policy *coreConf.Polic
 
 func getCore(c *conf.XrayConfig) *core.Instance {
 	os.Setenv("XRAY_LOCATION_ASSET", c.AssetPath)
-	// An empty access path must not fall through to Xray's console default.
-	// That default writes one line per connection to stdout, and journald keeps it under /var/log.
-	// The managed file is rotated by logrotate and followed live by "V2bX log".
-	accessLog := c.LogConfig.AccessPath
-	if accessLog == "" {
-		accessLog = "/etc/V2bX/access.log"
-	}
+	// An empty AccessPath is Xray's console log, so each connection shows up in "V2bX log".
+	// The literal "none" turns that log off. A path writes a file.
 	coreLogConfig := &coreConf.LogConfig{
 		LogLevel:  c.LogConfig.Level,
-		AccessLog: accessLog,
+		AccessLog: c.LogConfig.AccessPath,
 		ErrorLog:  c.LogConfig.ErrorPath,
 	}
 	// DNS config

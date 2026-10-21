@@ -143,6 +143,14 @@ SystemMaxFileSize=50M
 EOF
         systemctl restart systemd-journald >/dev/null 2>&1 || true
     fi
+    # Access lines stay in the capped journal. rsyslog must not copy them into /var/log.
+    if [[ -d /etc/rsyslog.d ]] || command -v rsyslogd >/dev/null 2>&1; then
+        mkdir -p /etc/rsyslog.d
+        cat > /etc/rsyslog.d/00-v2bx.conf <<'EOF'
+:programname, isequal, "V2bX" stop
+EOF
+        systemctl restart rsyslog >/dev/null 2>&1 || service rsyslog restart >/dev/null 2>&1 || true
+    fi
 }
 
 install_V2bX() {
@@ -222,6 +230,7 @@ LimitCORE=infinity
 LimitNOFILE=999999
 WorkingDirectory=/usr/local/V2bX/
 ExecStart=/usr/local/V2bX/V2bX server
+SyslogIdentifier=V2bX
 Restart=always
 RestartSec=10
 
