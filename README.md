@@ -1,13 +1,13 @@
 # V2bX
 
-A V2board node server with more than one core, based on XrayR. The current build runs the Xray core and supports VMess, VLESS, Trojan, and Shadowsocks. sing-box and Hysteria2 are temporarily disabled.
+A V2board node server based on Xray. It supports VMess, VLESS, Trojan, and Shadowsocks.
 
 This project is meant to be used with a [modified V2board](https://github.com/wyx2685/v2board).
 
 ## Features
 
 * Free and open source.
-* VMess, VLESS, Trojan, and Shadowsocks on the Xray core. sing-box and Hysteria2 are temporarily disabled.
+* VMess, VLESS, Trojan, and Shadowsocks on the Xray core.
 * VLESS, XTLS, and related newer options.
 * One process can serve several nodes.
 * Limit online IP addresses.
@@ -15,13 +15,11 @@ This project is meant to be used with a [modified V2board](https://github.com/wy
 * Speed limits per node port and per user.
 * A small, readable config file.
 * Editing the config restarts the instance automatically.
-* Several cores, and room to add more.
-* Build only the cores you need.
 
-## What each core supports
+## What Xray supports
 
-| Feature | v2ray | trojan | shadowsocks | hysteria1/2 |
-|-----------|-------|--------|-------------|----------|
+| Feature | vmess | vless | trojan | shadowsocks |
+|-----------|-------|-------|--------|-------------|
 | Request a TLS certificate | yes | yes | yes | yes |
 | Renew a TLS certificate | yes | yes | yes | yes |
 | Online user count | yes | yes | yes | yes |
@@ -55,8 +53,7 @@ See the [manual install guide](https://v2bx.v-50.me/v2bx/v2bx-xia-zai-he-an-zhua
 ## Build
 
 ```bash
-# This Xray build uses Go 1.27. sing-box and Hysteria2 are not linked:
-# this Xray requires sagernet/sing v0.9.6, which those cores do not compile against.
+# This build uses Go 1.27 and the Xray core.
 GOEXPERIMENT=jsonv2 go build -v -o build_assets/V2bX -tags "xray" -trimpath -ldflags "-X 'github.com/InazumaV/V2bX/cmd.version=$version' -s -w -buildid="
 ```
 
@@ -78,7 +75,6 @@ The [usage guide](https://v2bx.v-50.me/) walks through the config file.
 * [VNet-V2ray](https://github.com/ProxyPanel/VNet-V2ray)
 * [Air-Universe](https://github.com/crossfw/Air-Universe)
 * [XrayR](https://github.com/XrayR/XrayR)
-* [sing-box](https://github.com/SagerNet/sing-box)
 
 ## Star history
 

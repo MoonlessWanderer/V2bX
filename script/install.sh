@@ -63,9 +63,6 @@ if [[ x"${release}" == x"centos" ]]; then
     if [[ ${os_version} -le 6 ]]; then
         echo -e "${red}Please use CentOS 7 or a newer release.${plain}\n" && exit 1
     fi
-    if [[ ${os_version} -eq 7 ]]; then
-        echo -e "${red}Note: CentOS 7 cannot use the Hysteria 1 or 2 protocols.${plain}\n"
-    fi
 elif [[ x"${release}" == x"ubuntu" ]]; then
     if [[ ${os_version} -lt 16 ]]; then
         echo -e "${red}Please use Ubuntu 16 or a newer release.${plain}\n" && exit 1

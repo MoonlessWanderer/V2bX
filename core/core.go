@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/InazumaV/V2bX/conf"
 )
@@ -27,12 +26,7 @@ func NewCore(c []conf.CoreConfig) (Core, error) {
 }
 
 func unregisteredCore(coreType string) error {
-	switch strings.ToLower(coreType) {
-	case "sing", "hysteria2":
-		return errors.New(coreType + " is temporarily disabled in this build. Use the xray core")
-	default:
-		return errors.New("unknown core type: " + coreType)
-	}
+	return errors.New("unknown core type: " + coreType)
 }
 
 func RegisterCore(t string, f func(c *conf.CoreConfig) (Core, error)) {
