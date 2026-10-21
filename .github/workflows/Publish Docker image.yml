@@ -2,11 +2,24 @@ name: Publish Docker image
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Extra image tag, for example v0.4.11
+        required: false
+        type: string
   release:
     types: [published]
   pull_request:
     branches:
       - 'dev_new'
+
+# GHCR image names must be lowercase. repository_owner keeps the account's capitals.
+permissions:
+  contents: read
+  packages: write
+  actions: write
+  id-token: write
+  attestations: write
 
 env:
   REGISTRY: ghcr.io
@@ -25,7 +38,9 @@ jobs:
       - name: Prepare
         run: |
           platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV  
+          echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
+          owner=$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${owner}/v2bx" >> "$GITHUB_ENV"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,7 +50,17 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+            type=raw,value=${{ inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -76,6 +101,11 @@ jobs:
     needs:
       - build
     steps:
+      - name: Prepare image name
+        run: |
+          owner=$(printf '%s' "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${owner}/v2bx" >> "$GITHUB_ENV"
+
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
@@ -91,7 +121,17 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+            type=raw,value=${{ inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
